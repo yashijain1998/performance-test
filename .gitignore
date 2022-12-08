@@ -1,0 +1,5 @@
+node_modules/
+lighthouse-report-desktop/
+playwright-report/
+test-results/
+report.json
