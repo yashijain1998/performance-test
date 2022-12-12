@@ -1,0 +1,6 @@
+{
+    "BASE_URL": "https://qa-order.cambridgedev.org/basket",
+    "BASKET_API_URL": "https://qa-ecommerce-basket-api.cambridgedev.org",
+    "CHECKOUT_API_KEY": "MDMYtLORBZ5qJUeWYgdRq5Iz6mEQSTc55c901oUk",
+    "PRODUCT_ID": "[2800475402]"
+}

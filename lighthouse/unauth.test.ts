@@ -1,25 +1,14 @@
-import { test } from '@playwright/test';
-import { playAudit } from 'playwright-lighthouse';
-import lighthouseDesktopConfig from 'lighthouse/lighthouse-core/config/lr-desktop-config';
-const { getToken } = require("../userToken");
+const { test } = require('@playwright/test');
+const { playAudit } = require('playwright-lighthouse');
+const lighthouseDesktopConfig = require('lighthouse/lighthouse-core/config/lr-desktop-config');
 const fs =require('fs');
 const path = require('path');
-const baseurl = `${process.env.npm_config_baseurl}`;
-const urls = [ baseurl ];
+
+const config = require('../config');
+const { sendEmail } = require('../mailsend');
+const urls = [ config.BASE_URL ];
 const portarr = [9222,9221];
 const date = Date.now().toString();
-// const options = {
-//     logLevel: "info",
-// };
-// const configs = {
-//     extends: "lighthouse:default",
-//     settings: {
-//         onlyCategories: ["accessibility"],
-//         onlyAudits: ["largest-contentful-paint",
-//             "cumulative-layout-shift"],
-//         skipAudits: ["performance"]
-//     }
-// }
 
 test.use({ headless: false });
 urls.forEach(async (url) => {
@@ -30,7 +19,8 @@ urls.forEach(async (url) => {
       });
       const context = await browser.newContext();
       const page = await context.newPage();
-      const token = await getToken();
+      // const token = await getToken();
+      const token = process.env.npm_config_token;
       await page.goto(`${url}?token=${token}`);
       await playAudit({
       //   opts: options,
@@ -59,6 +49,7 @@ urls.forEach(async (url) => {
       await context.close();
       await browser.close();
       await reportClean();
+      await sendPerformanceMetric();
     }
     
   });
@@ -69,9 +60,9 @@ function reportClean() {
   fs.readFile(path.resolve(__dirname, file), function(err, data) {
     if (err) throw err;
     // Converting to JSON
-    const users = JSON.parse(data);
-    let writedata = dataCleanup(users);
-    fs.writeFile(path.resolve(__dirname, file), JSON.stringify(writedata), err => {
+    const metrics = JSON.parse(data);
+    let writedata = dataCleanup(metrics);
+    fs.writeFile(path.resolve(__dirname, file), JSON.stringify(writedata,null,4), err => {
         // Checking for errors
         if (err) throw err; 
     });
@@ -81,13 +72,30 @@ function reportClean() {
 const dataCleanup = (lightHouse) => {
   let auditData = lightHouse.audits;
   const data = {
-    "first-contentful-paint": auditData['first-contentful-paint'],
-    "largest-contentful-paint": auditData['largest-contentful-paint'],
-    "first-meaningful-paint": auditData['first-meaningful-paint'],
-    "speed-index": auditData['speed-index'],
-    "cumulative-layout-shift": auditData['cumulative-layout-shift'],
-    "total-blocking-time": auditData['total-blocking-time'],
-    "interactive": auditData['interactive']
+    "first-contentful-paint": auditData['first-contentful-paint']['displayValue'],
+    "largest-contentful-paint": auditData['largest-contentful-paint']['displayValue'],
+    "first-meaningful-paint": auditData['first-meaningful-paint']['displayValue'],
+    "speed-index": auditData['speed-index']['displayValue'],
+    "cumulative-layout-shift": auditData['cumulative-layout-shift']['displayValue'],
+    "total-blocking-time": auditData['total-blocking-time']['displayValue'],
+    "interactive": auditData['interactive']['displayValue']
   }
   return data
+}
+
+const sendPerformanceMetric = async() => {
+  const file = `../lighthouse-report-desktop/lighthouse-report-${date}.json`;
+  var mailOptions = {
+    from: 'jainnyashi@gmail.com',
+    to: 'yashi.jain@comprotechnologies.com',
+    subject: 'Ecom QA environment performance test result',
+    html: '<b>Ecom QA environment performance metric</b>',
+    attachments: [
+      {
+          filename: 'performance.json',
+          path: `${path.resolve(__dirname, file)}` // stream this file
+      }
+    ]
+  };
+  await sendEmail(mailOptions);
 }

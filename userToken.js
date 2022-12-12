@@ -1,10 +1,11 @@
 const axios = require('axios');
+const config = require('./config');
 let token = null;
 
 const getToken = async() => {
-    const headers = { 'Content-Type': 'application/json','x-api-key': 'MDMYtLORBZ5qJUeWYgdRq5Iz6mEQSTc55c901oUk' };
+    const headers = { 'Content-Type': 'application/json','x-api-key': config.CHECKOUT_API_KEY };
     const requestOptions = {
-        url: 'https://qa-ecommerce-basket-api.cambridgedev.org/temp-customer',
+        url: `${config.BASKET_API_URL}/temp-customer`,
         method: 'post'
     };
     const response = await axios({ headers, ...requestOptions });
@@ -17,11 +18,11 @@ const getToken = async() => {
 }
 
 const addToBasket = async(customerId) => {
-    let productsId = ['2800475402', '2800483274', '2800473984'];
+    let productsId = JSON.parse(config.PRODUCT_ID);
     productsId.forEach( async(pid) => {
-        const headers = { 'Content-Type': 'application/json','x-api-key': 'MDMYtLORBZ5qJUeWYgdRq5Iz6mEQSTc55c901oUk' };
+        const headers = { 'Content-Type': 'application/json','x-api-key': config.CHECKOUT_API_KEY };
         const requestOptions = {
-            url: 'https://qa-ecommerce-basket-api.cambridgedev.org/basket/items',
+            url: `${config.BASKET_API_URL}/basket/items`,
             method: 'post',
             data: {
                 product: {
@@ -37,9 +38,9 @@ const addToBasket = async(customerId) => {
 } 
 
 const generateToken = async(customerId) => {
-    const headers = { 'Content-Type': 'application/json','x-api-key': 'MDMYtLORBZ5qJUeWYgdRq5Iz6mEQSTc55c901oUk' };
+    const headers = { 'Content-Type': 'application/json','x-api-key': config.CHECKOUT_API_KEY };
     const requestOptions = {
-        url: 'https://qa-ecommerce-basket-api.cambridgedev.org/ssotoken',
+        url: `${config.BASKET_API_URL}/ssotoken`,
         method: 'post',
         data: {
           storeId: 'store_elt_compass',
@@ -47,7 +48,7 @@ const generateToken = async(customerId) => {
         }
     };
     const response = await axios({ headers, ...requestOptions });
-    return response.data.id;;
+    return response.data.id;
 }
 module.exports = {getToken};
 
